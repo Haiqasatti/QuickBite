@@ -1,8 +1,11 @@
 const variables = import.meta.env;
+const API_URL = (variables.VITE_API_URL || "https://quick-bite-zja8.vercel.app")
+	.replace(/\/+$/, "")
+	.replace(/\/api$/i, "");
 
 export const env = {
-	apiUrl: variables.VITE_API_URL || "http://localhost:5000/api",
-	apiOrigin: (variables.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/i, ""),
+	apiUrl: `${API_URL}/api`,
+	apiOrigin: API_URL,
 	currency: variables.VITE_CURRENCY || "PKR",
 	contactEmail: variables.VITE_CONTACT_EMAIL || "",
 	heroImageUrl: variables.VITE_HERO_IMAGE_URL || "",

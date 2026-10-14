@@ -29,9 +29,23 @@ function ensureBackendReady(): Promise<void> {
   return backendReady;
 }
 
+const allowedOrigins = [
+  "https://quick-bite-sigma-eight.vercel.app",
+  "https://quick-bite-a-565b.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Origin not allowed by CORS"));
+      }
+    },
   })
 );
 
