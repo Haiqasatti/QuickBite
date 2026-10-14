@@ -10,7 +10,24 @@ import imageRoutes from "./routes/imageRoutes.js";
 import { uploadsDirectory } from "./services/imageStorage.js";
 
 const app = express();
+export default app;
 const PORT = Number(process.env.PORT) || 5000;
+let backendReady: Promise<void> | undefined;
+
+function ensureBackendReady(): Promise<void> {
+  if (!process.env.JWT_SECRET) {
+    return Promise.reject(new Error("JWT_SECRET is not defined in environment variables"));
+  }
+
+  if (!backendReady) {
+    backendReady = connectDB().catch((error: unknown) => {
+      backendReady = undefined;
+      throw error;
+    });
+  }
+
+  return backendReady;
+}
 
 app.use(
   cors({
@@ -32,6 +49,15 @@ app.get("/api/health", (_req: Request, res: Response) => {
     success: true,
     message: "QuickBite API is running",
   });
+});
+
+app.use(async (_req: Request, _res: Response, next: NextFunction) => {
+  try {
+    await ensureBackendReady();
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.use("/api/auth", authRoutes);
@@ -65,11 +91,7 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 
 async function startServer(): Promise<void> {
   try {
-    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET is not defined in environment variables");
-    }
-
-    await connectDB();
+    await ensureBackendReady();
 
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
@@ -80,4 +102,6 @@ async function startServer(): Promise<void> {
   }
 }
 
-void startServer();
+if (!process.env.VERCEL) {
+  void startServer();
+}
